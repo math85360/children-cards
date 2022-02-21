@@ -1,0 +1,11 @@
+{
+  "name": "children-cards",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Mathieu Leguey",
+  "license": "MIT",
+  "dependencies": {
+    "htm": "^3.1.0",
+    "preact": "^10.6.6"
+  }
+}
