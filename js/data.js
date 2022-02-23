@@ -17,23 +17,16 @@ let objectList = [
     { categoryId: "other", name: "Ecole" },
 ]
 
-function useCategories() {
-    const [categories, setCategories] = useState(null)
-
+function useCategoriesLoader(handler) {
     useEffect(() => {
-        setCategories(categoryList)
-    })
-
-    return categories
+        handler(categoryList)
+    }, [false])
 }
 
-function useObjectListLoader(categoryId, loader) {
-    //const [list, setList] = useState(null)
-
+function useObjectListLoader(categoryId, handler) {
     useEffect(() => {
-        //setList(categoryId == null ? null : objectList.filter(x => x.categoryId == categoryId))
-        loader(objectList.filter(x => x.categoryId == categoryId))
+        handler(objectList.filter(x => x.categoryId == categoryId))
     }, [categoryId])
 }
 
-export { useCategories, useObjectListLoader }
+export { useCategoriesLoader, useObjectListLoader }
