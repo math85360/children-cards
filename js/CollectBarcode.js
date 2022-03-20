@@ -103,12 +103,12 @@ export default function () {
     useEffect(() => {
         if (currentBarcodes.length > 0) {
             if (recordMode) {
-                dispatch("record", currentBarcodes)
+                dispatch("record", { barcodes: currentBarcodes })
             } else {
                 setFound(
                     currentBarcodes.reduce((acc, barcode) => {
                         if (!!state.expected.find(barcode)) {
-                            dispatch("found", barcode)
+                            dispatch("found", { barcode: barcode })
                             return true
                         } else {
                             return acc
