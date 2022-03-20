@@ -95,3 +95,33 @@ body {
 .Filler {
     flex: 1;
 }
+
+.CollectBarcode {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+}
+.CollectBarcodeStreamContainer {
+    flex: 1;
+    overflow: hidden;
+}
+.CollectBarcodeStream {
+    width: 100%; 
+    height: 100%;
+}
+.CollectBarcodeResults {
+    transition: flex 1s ease-in-out;
+}
+.CollectBarcodePaused .CollectBarcodeResults {
+    flex: 1;
+}
+.CollectBarcodeRecord {
+    background-color: red;
+}
+@media screen and (orientation:portrait) {
+    .CollectBarcode {
+        flex-direction: column;
+    }
+}
+@media screen and (orientation:landscape) {
+}

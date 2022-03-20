@@ -1,11 +1,13 @@
 import { html, useState } from './common.js'
 import GameGiveAnyText from './GameGiveAnyText.js'
 import GameGuessTextFromPicture from './GameGuessTextFromPicture.js'
+import CollectBarcode from './CollectBarcode.js'
 import Settings from './Settings.js'
 
 const games = [
     //["Entrer un nom", () => html`<${GameGiveAnyText} />`],
     ["Deviner le nom à partir d'une image", () => html`<${GameGuessTextFromPicture} />`],
+    ["Collecter des codes-barres", () => html`<${CollectBarcode} />`]
 ]
 
 export default function (props) {
