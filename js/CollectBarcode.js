@@ -48,7 +48,7 @@ function ScanBarcode(props) {
                 window.clearInterval(handle)
             }
         }
-    }, [supportedBarcodeFormat, data])
+    }, [supportedBarcodeFormat, data, paused])
     useEffect(() => {
         if (paused) {
             ref.current.pause()
@@ -113,8 +113,9 @@ export default function () {
                         } else {
                             return acc
                         }
-                    }))
-                return () => setFound(null)
+                    }), false)
+                let handle = window.setTimeout(() => setFound(null), 5000)
+                return () => window.clearTimeout(handle)
             }
         }
     }, [currentBarcodes])
