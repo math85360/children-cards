@@ -66,18 +66,33 @@ function ScanBarcode(props) {
 function reducer(state, action) {
     switch (action.type) {
         case "found":
-            return { ...state, found: [...state.found, action.barcode] }
+            const idx = state.found.indexOf(action.barcode)
+            if (idx == -1) {
+                return { ...state, found: [...state.found, action.barcode] }
+            } else {
+                return state
+            }
+        case "reset":
+            return { ...state, found: [] }
+        case "reset-admin":
+            return { ...state, expected: [], found: [] }
         case "record":
             const nextExpected = action.barcodes.reduce((acc, c) => {
                 const idx = acc.indexOf(c)
-                return (idx == -1) ? [...acc, c] : acc.splice(idx, 1)
+                if (idx == -1) {
+                    return [...acc, c]
+                } else {
+                    acc.splice(idx, 1)
+                    return acc
+                }
             }, state.expected)
             return { ...state, expected: nextExpected }
     }
 }
 
 function showFound(state) {
-    if (state) {
+    const { found } = state
+    if (found) {
         return html`<div class="CollectBarcodeOK">Bravo ! Tu as trouvé !</div>`
     } else {
         return html`<div class="CollectBarcodeNotOK">Perdu, trouve autre chose !</div>`
@@ -100,6 +115,15 @@ export default function () {
         setPaused(true)
         setCurrentBarcodes(barcodes)
     }
+    const test = () => {
+        let result = window.prompt("Code barre ?")
+        if (!!result) {
+            barcodeFound([result])
+        }
+    }
+    const reset = () => {
+        dispatch(recordMode ? "reset-admin" : "reset")
+    }
     useEffect(() => {
         if (currentBarcodes.length > 0) {
             if (recordMode) {
@@ -107,16 +131,19 @@ export default function () {
             } else {
                 setFound(
                     currentBarcodes.reduce((acc, barcode) => {
-                        if (!!state.expected.find(barcode)) {
+                        if (state.expected.indexOf(barcode) == -1) {
+                            return acc
+                        } else {
                             dispatch("found", { barcode: barcode })
                             return true
-                        } else {
-                            return acc
                         }
-                    }), false)
-                let handle = window.setTimeout(() => setFound(null), 5000)
-                return () => window.clearTimeout(handle)
+                    }, false))
             }
+            let handle = window.setTimeout(() => {
+                setFound(null)
+                setPaused(false)
+            }, 5000)
+            return () => window.clearTimeout(handle)
         }
     }, [currentBarcodes])
     return html`
@@ -126,9 +153,11 @@ export default function () {
             <div>
                 <button onclick=${toggleRecord}>Record</button>
                 <button onclick=${togglePause}>pause</button>
+                <button onclick=${test}>test</button>
+                <button onclick=${reset}>Reset</button>
             </div>
         <h3>${state.found.length} / ${state.expected.length}</h3>
-        ${found == null ? html`` : html`<${showFound} />`}
+        ${found == null ? html`` : html`<${showFound} found=${found} />`}
         ${recordMode ? state.expected.map(barcode => html`<div>${barcode}</div>`) : ""}
         </div>
     </div>`
