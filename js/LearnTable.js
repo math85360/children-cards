@@ -108,7 +108,7 @@ function* range(start, end, action) {
   for (let i = start; i <= end; i++) {
     yield html`<button
       class="helper"
-      style="flex: 1 10%;"
+      style="flex: 1; zoom:0.5; height: 3em;"
       onClick=${() => action(i)}
     >
       ${i}
@@ -128,7 +128,7 @@ function* windowedRange(start, end, window, action) {
 function Answers(props) {
   const buttons = [...windowedRange(1, 20, 10, props.action)];
   return html`<div
-    style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 3em; flex: 1 50%; opacity: ${props.active
+    style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 3em; opacity: ${props.active
       ? 1
       : 0.1}; transition: opacity 0.3s; "
   >
