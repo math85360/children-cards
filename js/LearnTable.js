@@ -108,17 +108,19 @@ function* range(start, end, action) {
   for (let i = start; i <= end; i++) {
     yield html`<button
       class="helper"
-      style="flex: 1; zoom:0.5; height: 3em;"
+      style="flex: 1; zoom:0.5; height: 2em;"
       onClick=${() => action(i)}
     >
       ${i}
     </button>`;
   }
 }
-function* windowedRange(start, end, window, action) {
+function* windowedRange(start, end, window, action, active) {
   for (let i = start; i <= end; i += window) {
     yield html`<div
-      style="display: flex; flex-direction: row; gap: 2em; flex: 1;"
+      style="display: flex; flex-direction: row; gap: 2%; opacity: ${active
+        ? 1
+        : 0.1}; transition: opacity 0.3s; "
     >
       ${[...range(i, Math.min(end, i + window - 1), action)]}
     </div>`;
@@ -126,14 +128,8 @@ function* windowedRange(start, end, window, action) {
 }
 
 function Answers(props) {
-  const buttons = [...windowedRange(1, 20, 10, props.action)];
-  return html`<div
-    style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 3em; opacity: ${props.active
-      ? 1
-      : 0.1}; transition: opacity 0.3s; "
-  >
-    ${buttons}
-  </div>`;
+  const buttons = [...windowedRange(1, 20, 10, props.action, props.active)];
+  return buttons;
 }
 
 function ShowHistory(props) {
@@ -199,18 +195,18 @@ export default function () {
       return html`${state.label}`;
     } else if (state.mode === "RESULT") {
       return html`
-        <div>${state.correct ? "Bravo !" : "Dommage..."}</div>
-        <div>
-          ${state.correct
-            ? "+1"
-            : html`<div>La bonne réponse était :</div>
-                <div>
-                  ${state.label}
-                  <span style="color: #00A000; font-weight: bold;"
-                    >${state.answer}</span
-                  >
-                </div>`}
-        </div>
+        ${state.correct
+          ? html`<div>Bravo !</div>
+              <div>+1</div>`
+          : html`<div style="font-size: 50%;">
+                Dommage... La bonne réponse était :
+              </div>
+              <div>
+                ${state.label}
+                <span style="color: #00A000; font-weight: bold;"
+                  >${state.answer}</span
+                >
+              </div>`}
       `;
     }
   }
@@ -223,13 +219,13 @@ export default function () {
     >
       <div class="helper" style="text-align: right;">
         <div
-          style="font-size: 50%;"
+          style="font-size: 50%; position: absolute; right: 8px; top: 8px;"
           onClick=${() => dispatch({ type: "SHOW_HISTORY" })}
         >
           ${state.score} / ${state.history.length}
         </div>
       </div>
-      <div class="helper" style="text-align: center; height:4em; ">
+      <div class="helper" style="text-align: center; height:2.5em; ">
         ${buildTitle()}
       </div>
       <${Answers} action=${handleAnswer} active=${state.mode === "GUESS"} />
