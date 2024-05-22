@@ -84,8 +84,9 @@ const reducer = (state, action) => {
         const label = labels[Math.floor(Math.random() * labels.length)];
         const existAlreadyInHistory = state.history.find(
           (item) =>
-            (item.ruleId =
-              rule.id && item.operands.every((v, i) => v == operands[i]))
+            item.correct &&
+            item.ruleId == rule.id &&
+            item.operands.every((v, i) => v == operands[i])
         );
         if (!existAlreadyInHistory || iter > total)
           return {
