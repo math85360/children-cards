@@ -1,4 +1,10 @@
-import { html, useEffect, useReducer, useCallback } from "./common.js";
+import {
+  html,
+  useEffect,
+  useState,
+  useReducer,
+  useCallback,
+} from "./common.js";
 
 const ruleSet = [
   {
@@ -16,7 +22,7 @@ const ruleSet = [
     label: "Tables de 1 à 5",
     ranges: [
       [1, 10],
-      [1, 5],
+      [1, 6],
     ],
     operation: (a, b) => a + b,
     buildLabel: (operands) => [
@@ -52,12 +58,14 @@ const reducer = (state, action) => {
       const correct = action.value === state.answer;
       const score = state.score + (correct ? 1 : 0);
       const duration = time - state.time;
+      const date = new Date(time);
       const history = [
         ...state.history,
         {
           label: state.label,
           value: action.value,
           duration,
+          date,
           ruleId: state.rule.id,
           operands: state.operands,
           correct,
@@ -133,31 +141,166 @@ function Answers(props) {
   return buttons;
 }
 
-function ShowHistory(props) {
-  const { state } = props;
-  return html`<div
-    style="display: flex; flex-direction: column; flex: 1; gap: 2em;"
-  >
-    <table>
-      <thead>
-        <tr>
-          <th>Opération</th>
-          <th>Réponse</th>
-          <th>Temps</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${state.history.map((item) => {
-          return html` <tr>
-            <td>${item.label}</td>
-            <td style="color: ${item.correct ? "#00A000" : "#FF0000"}">
-              ${item.value}
-            </td>
-            <td>${item.duration} ms</td>
-          </tr>`;
+function HistoryTable({ history }) {
+  return html`<table>
+    <thead>
+      <tr>
+        <th>Opération</th>
+        <th>Réponse</th>
+        <th>Temps</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${history.map((item) => {
+        return html` <tr>
+          <td>${item.label}</td>
+          <td style="color: ${item.correct ? "#00A000" : "#FF0000"}">
+            ${item.value}
+          </td>
+          <td>${item.duration} ms</td>
+        </tr>`;
+      })}
+    </tbody>
+  </table>`;
+}
+function* calculateStats(history) {
+  const incorrectAnswers = history.filter((item) => !item.correct).length;
+  yield { label: "Réponses Incorrectes", value: incorrectAnswers };
+
+  const sortedDurations = history
+    .filter((item) => item.correct)
+    .map((item) => item.duration)
+    .sort((a, b) => a - b);
+  const quarterLength = Math.ceil(sortedDurations.length / 4);
+
+  const average = (arr) => arr.reduce((sum, val) => sum + val, 0) / arr.length;
+
+  const avgFastestQuarter =
+    average(sortedDurations.slice(0, quarterLength)) / 1000;
+  yield {
+    label: "Temps Moyen 1/4 rapide",
+    value: avgFastestQuarter,
+  };
+  const avgAll = average(sortedDurations) / 1000;
+  yield { label: "Temps Moyen", value: avgAll };
+  const avgSlowestQuarter =
+    average(sortedDurations.slice(-quarterLength)) / 1000;
+  yield {
+    label: "Temps Moyen 1/4 lent",
+    value: avgSlowestQuarter,
+  };
+}
+
+function HistoryStatGraph({ history }) {
+  const stats = [...calculateStats(history)];
+  const radiusLength = 100;
+  function pointOnCircle(r, index) {
+    const angle = (index / stats.length) * 2 * Math.PI;
+    return {
+      x: radiusLength * r * Math.cos(angle),
+      y: radiusLength * r * Math.sin(angle),
+    };
+  }
+  const points = stats.map((stat, index) => pointOnCircle(1, index));
+
+  return html`
+    <svg
+      width="300"
+      height="300"
+      viewBox="0 0 300 300"
+      style="min-height: 8cm;"
+    >
+      <g transform="translate(150, 150)">
+        <polygon
+          fill-opacity="0"
+          stroke="black"
+          points=${points.map(({ x, y }) => `${x},${y}`).join(" ")}
+        />
+        ${points.map(
+          ({ x, y }) =>
+            html`<line x1="0" y1="0" x2="${x}" y2="${y}" stroke="black" />`
+        )}
+        ${stats.map((stat, index) => {
+          const value = Math.min(stat.value, 10) / 10; // Scale to max 10
+          const { x, y } = pointOnCircle(value, index);
+          const angle = (index / stats.length) * 360;
+
+          return html`
+            <circle cx="${x}" cy="${y}" r="3" fill="red" />
+            <text
+              text-anchor="middle"
+              font-size="10"
+              transform="rotate(${angle}) translate(110 0) rotate(90)"
+            >
+              ${stat.label}: ${stat.value.toFixed(2)}
+            </text>
+            <line
+              x1="0"
+              y1="0"
+              x2="${x * (value / 100)}"
+              y2="${y * (value / 100)}"
+              stroke="blue"
+            />
+          `;
         })}
-      </tbody>
-    </table>
+      </g>
+    </svg>
+  `;
+}
+
+function ShowHistory(props) {
+  const { history } = props.state;
+  const date = history.length > 0 ? history[0].date : new Date(Date.now());
+  function formatDate(date) {
+    return date.toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+      hour: "numeric",
+    });
+  }
+  return html`<div
+    style="display: flex; flex-direction: column; flex: 1; gap: 2em; overflow-y: auto;"
+  >
+    <div style="font-size: 135%; font-weight: bold;">
+      Session du ${formatDate(date)}
+    </div>
+    <${HistoryTable} history=${history} />
+    <${HistoryStatGraph} history=${history} />
+  </div>`;
+}
+
+function Timer(props) {
+  const [time, setTime] = useState(Date.now());
+  const duration = props.duration || 5000;
+  const [progress, setProgress] = useState();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        return ((duration + time - Date.now()) / duration) * 100;
+      });
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return html`<div style="width: 20%;">
+    <div
+      style=${`width: 100%; background-color: ${
+        progress <= 0 && Math.round(Date.now() / 500) % 2 === 0
+          ? "red"
+          : "lightgray"
+      }; height: 10px; margin-top: 10px;`}
+    >
+      <div
+        style="width: ${Math.max(
+          0,
+          progress
+        )}%; background-color: green; height: 100%;"
+      ></div>
+    </div>
   </div>`;
 }
 
@@ -167,6 +310,7 @@ export default function () {
     guess: 0,
     score: 0,
     next: null,
+    mode: "IDLE",
   });
 
   const handleAnswer = useCallback(
@@ -175,6 +319,7 @@ export default function () {
   );
 
   useEffect(() => {
+    if (state.history.length === 0) return;
     let forget = false;
     let done = false;
     const handle = setTimeout(
@@ -192,8 +337,20 @@ export default function () {
   }, [state.history.length, state.mode]);
 
   function buildTitle() {
-    if (state.mode === "GUESS") {
-      return html`${state.label}`;
+    if (state.mode === "IDLE") {
+      return html`
+        <button
+          style="font-size: 50%; font-weight: bold;"
+          onClick=${() => dispatch({ type: "NEXT" })}
+        >
+          Commencer
+        </button>
+      `;
+    } else if (state.mode === "GUESS") {
+      return html`<div style="display: flex; flex-direction:row; gap: 1em;">
+        <div style="flex: 1;">${state.label}</div>
+        <${Timer} />
+      </div>`;
     } else if (state.mode === "RESULT") {
       return html`
         ${state.correct
