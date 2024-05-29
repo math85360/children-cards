@@ -32,7 +32,7 @@ const ruleSet = [
   },
 ];
 
-const IS_DEBUG = true;
+const IS_DEBUG = false;
 
 const count = (range) => range[1] - range[0] + 1;
 const countRanges = (ranges) =>
