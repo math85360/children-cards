@@ -32,6 +32,8 @@ const ruleSet = [
   },
 ];
 
+const IS_DEBUG = true;
+
 const count = (range) => range[1] - range[0] + 1;
 const countRanges = (ranges) =>
   ranges.reduce((acc, range) => acc + count(range), 0);
@@ -260,9 +262,7 @@ function ShowHistory(props) {
       hour: "numeric",
     });
   }
-  return html`<div
-    style="display: flex; flex-direction: column; flex: 1; gap: 2em; overflow-y: auto;"
-  >
+  return html`<div class="HistoryResults">
     <div style="font-size: 135%; font-weight: bold;">
       Session du ${formatDate(date)}
     </div>
@@ -328,7 +328,7 @@ export default function () {
           dispatch({ type: "NEXT" });
         done = true;
       },
-      state.history.length === 0 ? 0 : state.correct ? 800 : 5000
+      IS_DEBUG || state.history.length === 0 ? 0 : state.correct ? 800 : 5000
     );
     return () => {
       forget = true;
@@ -347,9 +347,18 @@ export default function () {
         </button>
       `;
     } else if (state.mode === "GUESS") {
+      // <${Timer} />
       return html`<div style="display: flex; flex-direction:row; gap: 1em;">
-        <div style="flex: 1;">${state.label}</div>
-        <${Timer} />
+        <div
+          style="flex: 1;"
+          onClick=${() => {
+            if (IS_DEBUG) {
+              dispatch({ type: "GUESS", value: state.answer });
+            }
+          }}
+        >
+          ${state.label}
+        </div>
       </div>`;
     } else if (state.mode === "RESULT") {
       return html`
