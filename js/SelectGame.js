@@ -24,7 +24,7 @@ export default function (props) {
     document.fonts.add(
       new FontFace(
         "Belle Allure CM",
-        "url(../resources/fonts/BELLEALLURECM-FIN.OTF)",
+        "url(./resources/fonts/BELLEALLURECM-FIN.OTF)",
         { style: "normal", weight: "normal" }
       )
     );
