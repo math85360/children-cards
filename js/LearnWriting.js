@@ -1,11 +1,19 @@
 import { html, useMemo, useState, useRef, useEffect } from "./common.js";
 
-function EnterText({ onTextEntered }) {
+function EnterText({ onTextEntered, onSizeEntered }) {
   const [text, setText] = useState("");
+  const [size, setSize] = useState("60");
   const handleInput = (e) => {
     const newText = e.target.value;
     setText(newText);
     onTextEntered(newText);
+  };
+
+  const handleSizeInput = (e) => {
+    const newSize = e.target.value;
+    setSize(newSize);
+    const parsedSize = parseInt(newSize, 10);
+    onSizeEntered(parsedSize);
   };
 
   return html`
@@ -17,6 +25,9 @@ function EnterText({ onTextEntered }) {
         style="width: 100%;"
         multiline="true"
       ></textarea>
+    </div>
+    <div>
+      <input value=${size} onInput=${handleSizeInput} style="width: 100%;" />
     </div>
   `;
 }
@@ -43,7 +54,7 @@ function Writing({ text, fontSize, docWidth }) {
     ctx.font = `${fontSize}px 'Belle Allure CM'`;
 
     let x = 10;
-    let y = 100;
+    let y = 300 - ((3 * fontSize) / 4) * 1.2;
     let i = currentWordIndex;
     let wordsOnScreen = 0;
     while (i < words.length) {
@@ -130,7 +141,7 @@ function Writing({ text, fontSize, docWidth }) {
       <canvas
         ref=${canvasRef}
         width=${docWidth}
-        height="200"
+        height="300"
         onPointerMove=${handleDraw}
         onPointerDown=${handlePointerDown}
         onPointerUp=${handlePointerUp}
@@ -139,7 +150,7 @@ function Writing({ text, fontSize, docWidth }) {
       <canvas
         ref=${offscreenCanvasRef}
         width=${docWidth}
-        height="200"
+        height="300"
         style="display: none; width: 100%;"
       ></canvas>
     </div>
@@ -153,13 +164,17 @@ function Writing({ text, fontSize, docWidth }) {
 
 function LearnWriting() {
   const [text, setText] = useState("");
+  const [size, setSize] = useState(60);
   const [docWidth, setDocWidth] = useState(
     document.documentElement.clientWidth
   );
   return html`
     <div>
-      <${EnterText} onTextEntered=${(text) => setText(text)} />
-      <${Writing} docWidth=${docWidth} text=${text} fontSize="40" />
+      <${EnterText}
+        onTextEntered=${(text) => setText(text)}
+        onSizeEntered=${(nextSize) => setSize(nextSize)}
+      />
+      <${Writing} docWidth=${docWidth} text=${text} fontSize=${size} />
     </div>
   `;
 }
