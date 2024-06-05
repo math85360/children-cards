@@ -1,3 +1,17 @@
+@font-face {
+  font-family: "Belle Allure CM";
+  src: url("../fonts/BELLEALLURECM-FIN.OTF") format("otf");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Belle Allure CM";
+  src: url("../fonts/BELLEALLURECM-GROS.OTF") format("otf");
+  font-weight: 700;
+  font-style: normal;
+}
+
 html {
   width: 100%;
   height: 100%;
@@ -138,4 +152,7 @@ body {
   }
 }
 @media screen and (orientation: landscape) {
+}
+canvas {
+  border: 1px solid black;
 }
