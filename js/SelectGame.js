@@ -1,4 +1,4 @@
-import { html, useState } from "./common.js";
+import { html, useState, useEffect } from "./common.js";
 import GameGiveAnyText from "./GameGiveAnyText.js";
 import LearnTable from "./LearnTable.js";
 import GameGuessTextFromPicture from "./GameGuessTextFromPicture.js";
@@ -20,6 +20,15 @@ const games = [
 
 export default function (props) {
   const [state, setState] = useState(null);
+  useEffect(() => {
+    document.fonts.add(
+      new FontFace(
+        "Belle Allure CM",
+        "url(../resources/fonts/BELLEALLURECM-FIN.OTF)",
+        { style: "normal", weight: "normal" }
+      )
+    );
+  }, []);
   if (state === null) {
     const list = games.map(
       (game) =>
