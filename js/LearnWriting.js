@@ -21,29 +21,50 @@ function EnterText({ onTextEntered }) {
   `;
 }
 
-function Writing({ text, fontSize }) {
-  const lines = useMemo(() => text.split("\n"), [text]);
-  const [currentLine, setCurrentLine] = useState(0);
+function splitText(text) {
+  const regex = /(\p{L}+['']?\p{L}*|[.,!?;:])/gu;
+  return text.match(regex) || [];
+}
+
+function Writing({ text, fontSize, docWidth }) {
+  const words = useMemo(() => splitText(text), [text]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 });
   const canvasRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
+  const [wordsOnScreen, setWordsOnScreen] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Effacer le canvas avant de redessiner
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.font = `${fontSize}px 'Belle Allure CM'`;
-    ctx.fillText(lines[currentLine], 10, 100);
 
-    // Copier le contenu du canvas hors écran sur le canvas visible
+    let x = 10;
+    let y = 100;
+    let i = currentWordIndex;
+    let wordsOnScreen = 0;
+    while (i < words.length) {
+      const word = words[i];
+      const wordWidth = ctx.measureText(word).width;
+      if (x + wordWidth > canvas.width) {
+        break;
+      }
+      ctx.fillText(word, x, y);
+      x += wordWidth + ctx.measureText(" ").width;
+      i++;
+      wordsOnScreen++;
+    }
+
     const offscreenCanvas = offscreenCanvasRef.current;
     ctx.drawImage(offscreenCanvas, 0, 0);
-  }, [lines, currentLine, fontSize]);
+
+    setWordsOnScreen(wordsOnScreen);
+  }, [words, currentWordIndex, fontSize]);
 
   function handleDraw(event) {
-    console.log("handleDraw", event.isPrimary, isDrawing, event);
     if (isDrawing && event.isPrimary) {
       const { offsetX, offsetY } = event;
       drawSegment(offsetX, offsetY, false);
@@ -70,6 +91,8 @@ function Writing({ text, fontSize }) {
 
     const drawOnCanvas = (ctx, x, y, moveTo) => {
       ctx.strokeStyle = "red";
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
       ctx.beginPath();
       if (moveTo) {
         ctx.moveTo(x, y);
@@ -84,9 +107,9 @@ function Writing({ text, fontSize }) {
     drawOnCanvas(offscreenCtx, x, y, moveTo);
   }
 
-  function handleNextLine() {
-    if (currentLine < lines.length - 1) {
-      setCurrentLine(currentLine + 1);
+  function handleNextWord() {
+    if (currentWordIndex + wordsOnScreen < words.length) {
+      setCurrentWordIndex(currentWordIndex + wordsOnScreen);
       const offscreenCanvas = offscreenCanvasRef.current;
       const offscreenCtx = offscreenCanvas.getContext("2d");
       offscreenCtx.clearRect(
@@ -106,31 +129,37 @@ function Writing({ text, fontSize }) {
     <div>
       <canvas
         ref=${canvasRef}
-        width="800"
+        width=${docWidth}
         height="200"
         onPointerMove=${handleDraw}
         onPointerDown=${handlePointerDown}
         onPointerUp=${handlePointerUp}
-        style="touch-action: none;"
+        style="touch-action: none; width: 100%;"
       ></canvas>
       <canvas
         ref=${offscreenCanvasRef}
-        width="800"
+        width=${docWidth}
         height="200"
-        style="display: none;"
+        style="display: none; width: 100%;"
       ></canvas>
-      <button onClick=${handleNextLine}>Next Line</button>
-      <button onClick=${calculateScore}>Calculate Score</button>
+    </div>
+    <div style="display: flex; justify-content: right;">
+      <button onClick=${handleNextWord} style="font-size: 40px;">
+        Continuer
+      </button>
     </div>
   `;
 }
 
 function LearnWriting() {
   const [text, setText] = useState("");
+  const [docWidth, setDocWidth] = useState(
+    document.documentElement.clientWidth
+  );
   return html`
     <div>
       <${EnterText} onTextEntered=${(text) => setText(text)} />
-      <${Writing} text=${text} fontSize="40" />
+      <${Writing} docWidth=${docWidth} text=${text} fontSize="40" />
     </div>
   `;
 }
