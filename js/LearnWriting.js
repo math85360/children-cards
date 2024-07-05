@@ -47,6 +47,7 @@ function Writing({ text, fontSize, docWidth }) {
   const [wordsOnScreen, setWordsOnScreen] = useState(0);
   const [canvasRefs, setCanvasRefs] = useState([]);
   const [showModel, setShowModel] = useState(true);
+  const [pointerData, setPointerData] = useState({});
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,7 +63,7 @@ function Writing({ text, fontSize, docWidth }) {
     while (i < words.length) {
       const word = words[i];
       const wordWidth = ctx.measureText(word).width;
-      if (x + wordWidth > canvas.width) {
+      if (x + wordWidth > canvas.width * 0.8) {
         break;
       }
       ctx.fillText(word, x, y);
@@ -78,22 +79,55 @@ function Writing({ text, fontSize, docWidth }) {
   }, [words, currentWordIndex, fontSize, showModel]);
 
   function handleDraw(event) {
-    if (isDrawing && event.isPrimary) {
+    updatePointerData(event);
+    if (isDrawing && isRightPointer(event)) {
       const { offsetX, offsetY } = event;
       drawSegment(offsetX, offsetY, false);
       setLastPosition({ x: offsetX, y: offsetY });
     }
   }
 
-  function handlePointerDown(event) {
-    const { offsetX, offsetY } = event;
-    setIsDrawing(true);
-    drawSegment(offsetX, offsetY, true);
-    setLastPosition({ x: offsetX, y: offsetY });
+  function updatePointerData(event) {
+    console.log(event);
+    if (event.isPrimary)
+      setPointerData({
+        x: event.offsetX,
+        y: event.offsetY,
+        tiltX: event.tiltX,
+        tiltY: event.tiltY,
+        button: event.button,
+        buttons: event.buttons,
+        twist: event.twist,
+        pressure: event.pressure,
+        tangentialPressure: event.tangentialPressure,
+        altitudeAngle: event.altitudeAngle,
+        azimuthAngle: event.azimuthAngle,
+      });
   }
 
-  function handlePointerUp() {
-    setIsDrawing(false);
+  function handlePointerDown(event) {
+    updatePointerData(event);
+    if (isRightPointer(event)) {
+      const { offsetX, offsetY } = event;
+      setIsDrawing(true);
+      drawSegment(offsetX, offsetY, true);
+      setLastPosition({ x: offsetX, y: offsetY });
+    }
+  }
+
+  function handlePointerUp(event) {
+    updatePointerData(event);
+    if (isRightPointer(event)) {
+      setIsDrawing(false);
+    }
+  }
+
+  function handlePointerOver(event) {
+    updatePointerData(event);
+  }
+
+  function isRightPointer(event) {
+    return event.isPrimary && event.pointerType === "pen" && event.button === 0;
   }
 
   function drawSegment(x, y, moveTo) {
@@ -161,27 +195,6 @@ function Writing({ text, fontSize, docWidth }) {
   }
 
   return html`
-    <div>
-      <canvas
-        ref=${canvasRef}
-        width=${docWidth}
-        height="300"
-        onPointerMove=${handleDraw}
-        onPointerDown=${handlePointerDown}
-        onPointerUp=${handlePointerUp}
-        class="writing-screen-only"
-      ></canvas>
-      <canvas
-        ref=${offscreenCanvasRef}
-        width=${docWidth}
-        height="300"
-        style="display: none; width: 100%;"
-      ></canvas>
-      ${canvasRefs.map(
-        (source, index) =>
-          html`<${ShowCanvas} source=${source} docWidth=${docWidth} />`
-      )}
-    </div>
     <div
       style="display: flex; justify-content: space-between;"
       class="screen-only"
@@ -194,11 +207,34 @@ function Writing({ text, fontSize, docWidth }) {
         />
         Voir le modèle en-dessous
       </label>
+      <div>${JSON.stringify(pointerData, null, 2)}</div>
       <button onClick=${handleNextWord} style="font-size: 40px;">
         ${currentWordIndex + wordsOnScreen < words.length
           ? "Continuer"
           : "Terminer"}
       </button>
+    </div>
+    <div>
+      <canvas
+        ref=${canvasRef}
+        width=${docWidth}
+        height="300"
+        onPointerMove=${handleDraw}
+        onPointerDown=${handlePointerDown}
+        onPointerUp=${handlePointerUp}
+        onPointerOver=${handlePointerOver}
+        class="writing-screen-only"
+      ></canvas>
+      <canvas
+        ref=${offscreenCanvasRef}
+        width=${docWidth}
+        height="300"
+        style="display: none; width: 100%;"
+      ></canvas>
+      ${canvasRefs.map(
+        (source, index) =>
+          html`<${ShowCanvas} source=${source} docWidth=${docWidth} />`
+      )}
     </div>
   `;
 }
