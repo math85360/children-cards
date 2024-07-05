@@ -156,3 +156,24 @@ body {
 canvas {
   border: 1px solid black;
 }
+
+@media screen {
+  .writing-screen-only {
+    touch-action: none;
+    width: 100%;
+  }
+  .print-canvas {
+    display: none;
+  }
+}
+@media print {
+  .print-canvas {
+    display: block !important;
+    border: none;
+    zoom: 0.5;
+  }
+  .writing-screen-only,
+  .screen-only {
+    display: none !important;
+  }
+}

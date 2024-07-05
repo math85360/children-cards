@@ -19,15 +19,60 @@ const ruleSet = [
   },
   {
     id: "additions",
-    label: "Tables de 1 à 5",
+    label: "Tables de 1 à 10",
     ranges: [
       [1, 10],
-      [1, 6],
+      [1, 10],
     ],
     operation: (a, b) => a + b,
     buildLabel: (operands) => [
       `${operands[0]} + ${operands[1]} =`,
       `${operands[1]} + ${operands[0]} =`,
+      `${operands[0]} plus ${operands[1]} =`,
+      `${operands[1]} plus ${operands[0]} =`,
+      `La somme de ${operands[0]} et ${operands[1]} est `,
+      `La somme de ${operands[1]} et ${operands[0]} est `,
+    ],
+  },
+  {
+    id: "multiplications",
+    label: "Multiplications de 1 à 5",
+    ranges: [
+      [1, 10],
+      [1, 5],
+    ],
+    operation: (a, b) => a + b,
+    buildLabel: (operands) => [
+      `${operands[0]} × ${operands[1]} =`,
+      `${operands[1]} × ${operands[0]} =`,
+      `${operands[0]} fois ${operands[1]} =`,
+      `${operands[1]} fois ${operands[0]} =`,
+      `${operands[0]} paquets ${operands[1]} =`,
+      `${operands[1]} paquets ${operands[0]} =`,
+      `Le produit de ${operands[1]} par ${operands[0]} est `,
+      `Le produit de ${operands[0]} par ${operands[1]} est `,
+    ],
+    renderHints: [
+      (operands) => {
+        const rows = [];
+        for (let i = 0; i < operands[0]; i++) {
+          const dots = [];
+          for (let j = 0; j < operands[1]; j++) {
+            dots.push(html`•`);
+          }
+          rows.push(html`<div>${dots}</div>`);
+        }
+        return html`<div>${rows}</div>`;
+      },
+      (operands) => {
+        const sorted = Array.from(operands);
+        sorted.sort((a, b) => a - b);
+        const units = [];
+        for (let i = 0; i < sorted[0]; i++) {
+          units.push(html`<div>${sorted[1]}</div>`);
+        }
+        return html`<div>${units.join(" + ")} =</div>`;
+      },
     ],
   },
 ];

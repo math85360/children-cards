@@ -17,7 +17,7 @@ function EnterText({ onTextEntered, onSizeEntered }) {
   };
 
   return html`
-    <div>
+    <div class="screen-only">
       <textarea
         value=${text}
         onInput=${handleInput}
@@ -26,7 +26,7 @@ function EnterText({ onTextEntered, onSizeEntered }) {
         multiline="true"
       ></textarea>
     </div>
-    <div>
+    <div class="screen-only">
       <input value=${size} onInput=${handleSizeInput} style="width: 100%;" />
     </div>
   `;
@@ -45,6 +45,8 @@ function Writing({ text, fontSize, docWidth }) {
   const canvasRef = useRef(null);
   const offscreenCanvasRef = useRef(null);
   const [wordsOnScreen, setWordsOnScreen] = useState(0);
+  const [canvasRefs, setCanvasRefs] = useState([]);
+  const [showModel, setShowModel] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -73,7 +75,7 @@ function Writing({ text, fontSize, docWidth }) {
     ctx.drawImage(offscreenCanvas, 0, 0);
 
     setWordsOnScreen(wordsOnScreen);
-  }, [words, currentWordIndex, fontSize]);
+  }, [words, currentWordIndex, fontSize, showModel]);
 
   function handleDraw(event) {
     if (isDrawing && event.isPrimary) {
@@ -119,8 +121,17 @@ function Writing({ text, fontSize, docWidth }) {
   }
 
   function handleNextWord() {
-    if (currentWordIndex + wordsOnScreen < words.length) {
-      setCurrentWordIndex(currentWordIndex + wordsOnScreen);
+    const isTotallyDone = currentWordIndex + wordsOnScreen >= words.length;
+    const isLast = currentWordIndex + wordsOnScreen === words.length;
+
+    if (false && isTotallyDone) {
+    } else {
+      const nextCanvas = document.createElement("canvas");
+      nextCanvas.width = canvasRef.current.width;
+      nextCanvas.height = canvasRef.current.height;
+      const ctx = nextCanvas.getContext("2d");
+      ctx.drawImage(canvasRef.current, 0, 0);
+      setCanvasRefs((prevRefs) => [...prevRefs, nextCanvas]);
       const offscreenCanvas = offscreenCanvasRef.current;
       const offscreenCtx = offscreenCanvas.getContext("2d");
       offscreenCtx.clearRect(
@@ -129,6 +140,19 @@ function Writing({ text, fontSize, docWidth }) {
         offscreenCanvas.width,
         offscreenCanvas.height
       );
+
+      // Ajouter un nouveau canvas pour l'étape actuelle
+
+      if (currentWordIndex + wordsOnScreen < words.length) {
+        setCurrentWordIndex(currentWordIndex + wordsOnScreen);
+      } else {
+        // Dernier morceau, on arrête d'afficher le texte
+        setCurrentWordIndex(words.length);
+        // Effacer le canvas actuel
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     }
   }
 
@@ -145,7 +169,7 @@ function Writing({ text, fontSize, docWidth }) {
         onPointerMove=${handleDraw}
         onPointerDown=${handlePointerDown}
         onPointerUp=${handlePointerUp}
-        style="touch-action: none; width: 100%;"
+        class="writing-screen-only"
       ></canvas>
       <canvas
         ref=${offscreenCanvasRef}
@@ -153,13 +177,48 @@ function Writing({ text, fontSize, docWidth }) {
         height="300"
         style="display: none; width: 100%;"
       ></canvas>
+      ${canvasRefs.map(
+        (source, index) =>
+          html`<${ShowCanvas} source=${source} docWidth=${docWidth} />`
+      )}
     </div>
-    <div style="display: flex; justify-content: right;">
+    <div
+      style="display: flex; justify-content: space-between;"
+      class="screen-only"
+    >
+      <label>
+        <input
+          type="checkbox"
+          checked=${showModel}
+          onChange=${() => setShowModel(!showModel)}
+        />
+        Voir le modèle en-dessous
+      </label>
       <button onClick=${handleNextWord} style="font-size: 40px;">
-        Continuer
+        ${currentWordIndex + wordsOnScreen < words.length
+          ? "Continuer"
+          : "Terminer"}
       </button>
     </div>
   `;
+}
+
+function ShowCanvas({ source, docWidth }) {
+  const canvasRef = useRef(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(source, 0, 0);
+    }
+  }, [source]);
+  return html`<canvas
+    ref=${canvasRef}
+    width=${docWidth}
+    height="300"
+    style="display: none; width: 100%;"
+    class="print-canvas"
+  ></canvas> `;
 }
 
 function LearnWriting() {
