@@ -81,37 +81,47 @@ function Writing({ text, fontSize, docWidth }) {
   function handleDraw(event) {
     updatePointerData(event);
     if (isDrawing && isRightPointer(event)) {
-      const { offsetX, offsetY } = event;
-      drawSegment(offsetX, offsetY, false);
-      setLastPosition({ x: offsetX, y: offsetY });
+      if (event.buttons === 1) {
+        const { offsetX, offsetY } = event;
+        drawSegment(offsetX, offsetY, false);
+        setLastPosition({ x: offsetX, y: offsetY });
+      } else if (event.buttons === 2) {
+        clearPoint(offsetX, offsetY);
+      }
     }
   }
 
   function updatePointerData(event) {
-    console.log(event);
     if (event.isPrimary)
       setPointerData({
-        x: event.offsetX,
-        y: event.offsetY,
+        x: event.offsetX.toFixed(0),
+        y: event.offsetY.toFixed(0),
         tiltX: event.tiltX,
         tiltY: event.tiltY,
         button: event.button,
         buttons: event.buttons,
         twist: event.twist,
         pressure: event.pressure,
-        tangentialPressure: event.tangentialPressure,
-        altitudeAngle: event.altitudeAngle,
-        azimuthAngle: event.azimuthAngle,
+        tangentialPressure: (
+          (360 * event.tangentialPressure) /
+          Math.PI
+        ).toFixed(2),
+        altitudeAngle: ((360 * event.altitudeAngle) / Math.PI).toFixed(2),
+        azimuthAngle: ((360 * event.azimuthAngle) / Math.PI).toFixed(2),
       });
   }
 
   function handlePointerDown(event) {
     updatePointerData(event);
     if (isRightPointer(event)) {
-      const { offsetX, offsetY } = event;
-      setIsDrawing(true);
-      drawSegment(offsetX, offsetY, true);
-      setLastPosition({ x: offsetX, y: offsetY });
+      if (event.button === 0) {
+        const { offsetX, offsetY } = event;
+        setIsDrawing(true);
+        drawSegment(offsetX, offsetY, true);
+        setLastPosition({ x: offsetX, y: offsetY });
+      } else if (event.button === 1) {
+        clearPoint(offsetX, offsetY);
+      }
     }
   }
 
@@ -127,7 +137,19 @@ function Writing({ text, fontSize, docWidth }) {
   }
 
   function isRightPointer(event) {
-    return event.isPrimary && event.pointerType === "pen" && event.button === 0;
+    return event.isPrimary && event.pointerType === "pen";
+  }
+
+  function clearPoint(x, y) {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    // ctx.clearRect(x, y, 1, 1);
   }
 
   function drawSegment(x, y, moveTo) {
@@ -164,6 +186,7 @@ function Writing({ text, fontSize, docWidth }) {
       nextCanvas.width = canvasRef.current.width;
       nextCanvas.height = canvasRef.current.height;
       const ctx = nextCanvas.getContext("2d");
+      // ctx.drawImage(offscreenCanvasRef.current, 0, 0);
       ctx.drawImage(canvasRef.current, 0, 0);
       setCanvasRefs((prevRefs) => [...prevRefs, nextCanvas]);
       const offscreenCanvas = offscreenCanvasRef.current;
@@ -207,13 +230,16 @@ function Writing({ text, fontSize, docWidth }) {
         />
         Voir le modèle en-dessous
       </label>
-      <div>${JSON.stringify(pointerData, null, 2)}</div>
-      <button onClick=${handleNextWord} style="font-size: 40px;">
+      <div style="font-size: 7pt; ">
+        ${/*JSON.stringify(pointerData, null, 2)*/ ""}
+      </div>
+      <button onClick=${handleNextWord} style="font-size: 40px; ">
         ${currentWordIndex + wordsOnScreen < words.length
           ? "Continuer"
           : "Terminer"}
       </button>
     </div>
+    <div class="print-canvas">${text}</div>
     <div>
       <canvas
         ref=${canvasRef}
