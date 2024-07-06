@@ -78,13 +78,20 @@ function Writing({ text, fontSize, docWidth }) {
     setWordsOnScreen(wordsOnScreen);
   }, [words, currentWordIndex, fontSize, showModel]);
 
+  function getFixedPosition(event) {
+    const { offsetX, offsetY, tiltX, tiltY } = event;
+    const realX = offsetX - tiltX;
+    const realY = offsetY + tiltY;
+    return { x: realX, y: realY };
+  }
+
   function handleDraw(event) {
     updatePointerData(event);
     if (isDrawing && isRightPointer(event)) {
       if (event.buttons === 1) {
-        const { offsetX, offsetY } = event;
-        drawSegment(offsetX, offsetY, false);
-        setLastPosition({ x: offsetX, y: offsetY });
+        const { x, y } = getFixedPosition(event);
+        drawSegment(x, y, false);
+        setLastPosition({ x, y });
       } else if (event.buttons === 2) {
         clearPoint(offsetX, offsetY);
       }
@@ -115,10 +122,10 @@ function Writing({ text, fontSize, docWidth }) {
     updatePointerData(event);
     if (isRightPointer(event)) {
       if (event.button === 0) {
-        const { offsetX, offsetY } = event;
+        const { x, y } = getFixedPosition(event);
         setIsDrawing(true);
-        drawSegment(offsetX, offsetY, true);
-        setLastPosition({ x: offsetX, y: offsetY });
+        drawSegment(x, y, true);
+        setLastPosition({ x, y });
       } else if (event.button === 1) {
         clearPoint(offsetX, offsetY);
       }
