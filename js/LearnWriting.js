@@ -80,7 +80,7 @@ function Writing({ text, fontSize, docWidth }) {
 
   function getFixedPosition(event) {
     const { offsetX, offsetY, tiltX, tiltY } = event;
-    const realX = offsetX - tiltX;
+    const realX = offsetX + tiltX;
     const realY = offsetY + tiltY;
     return { x: realX, y: realY };
   }
