@@ -92,7 +92,7 @@ function Writing({ text, fontSize, docWidth }) {
   }
 
   function updatePointerData(event) {
-    if (event.isPrimary)
+    if (event.isPrimary && false)
       setPointerData({
         x: event.offsetX.toFixed(0),
         y: event.offsetY.toFixed(0),
@@ -144,10 +144,10 @@ function Writing({ text, fontSize, docWidth }) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.strokeStyle = "white";
-    ctx.lineWidth = 20;
+    ctx.lineWidth = 100;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x, y);
+    ctx.lineTo(x + 1, y + 1);
     ctx.stroke();
     // ctx.clearRect(x, y, 1, 1);
   }
@@ -219,7 +219,7 @@ function Writing({ text, fontSize, docWidth }) {
 
   return html`
     <div
-      style="display: flex; justify-content: space-between;"
+      style="display: flex; justify-content: space-between; "
       class="screen-only"
     >
       <label>
@@ -290,7 +290,7 @@ function LearnWriting() {
     document.documentElement.clientWidth
   );
   return html`
-    <div>
+    <div style="user-select: none;">
       <${EnterText}
         onTextEntered=${(text) => setText(text)}
         onSizeEntered=${(nextSize) => setSize(nextSize)}
