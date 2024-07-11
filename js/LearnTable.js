@@ -41,7 +41,7 @@ const ruleSet = [
       [1, 10],
       [1, 5],
     ],
-    operation: (a, b) => a + b,
+    operation: (a, b) => a * b,
     buildLabel: (operands) => [
       `${operands[0]} × ${operands[1]} =`,
       `${operands[1]} × ${operands[0]} =`,
