@@ -20,6 +20,15 @@ const games = [
 
 export default function (props) {
   const [state, setState] = useState(null);
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
   useEffect(() => {
     document.fonts.add(
       new FontFace(
@@ -47,6 +56,7 @@ export default function (props) {
   } else {
     return html`<div>
         <button onclick=${(x) => setState(null)}>Sortir</button>
+        <button onclick=${(x) => toggleFullScreen()}>Plein écran</button>
       </div>
       ${state}`;
   }
