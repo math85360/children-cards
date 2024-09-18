@@ -5,6 +5,7 @@ import GameGuessTextFromPicture from "./GameGuessTextFromPicture.js";
 import CollectBarcode from "./CollectBarcode.js";
 import Settings from "./Settings.js";
 import LearnWriting from "./LearnWriting.js";
+import Dictation from "./Dictation.js";
 
 const games = [
   //["Entrer un nom", () => html`<${GameGiveAnyText} />`],
@@ -16,6 +17,7 @@ const games = [
   ["Jeu audio : deviner le mot", () => html`<${AudioGame} />`],
   ["Apprendre les tables", () => html`<${LearnTable} />`],
   ["Apprendre l'écriture", () => html`<${LearnWriting} />`],
+  ["Dictée", () => html`<${Dictation} />`],
 ];
 
 export default function (props) {
